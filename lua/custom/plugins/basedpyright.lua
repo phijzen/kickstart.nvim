@@ -19,32 +19,41 @@ return {
           'basedpyright',
           -- other LSP servers
         },
-      }
-    end,
-  },
-
-  -- LSP configuration
-  {
-    'neovim/nvim-lspconfig',
-    dependencies = {
-      'williamboman/mason-lspconfig.nvim',
-    },
-    config = function()
-      local lspconfig = require 'lspconfig'
-
-      -- Basedpyright configuration
-      lspconfig.basedpyright.setup {
-        settings = {
-          basedpyright = {
-            analysis = {
-              typeCheckingMode = 'standard',
-              autoSearchPaths = true,
-              useLibraryCodeForTypes = true,
-              diagnosticMode = 'workspace',
-            },
-          },
+        handlers = {
+          function(server_name)
+            vim.lsp.config(server_name, {})
+          end,
+          basedpyright = function()
+            vim.lsp.config.basedpyright = {
+              cmd = { 'basedpyright-langserver', '--stdio' },
+              root_markers = { 'pyproject.toml', 'setup.py', '.git' },
+              filetypes = { 'python' },
+              settings = {
+                basedpyright = {
+                  analysis = {
+                    typeCheckingMode = 'standard',
+                    autoSearchPaths = true,
+                    useLibraryCodeForTypes = true,
+                    diagnosticMode = 'workspace',
+                  },
+                },
+              },
+            }
+            vim.lsp.enable 'basedpyright'
+          end,
         },
       }
+
+      -- Set up LSP keybindings
+      vim.api.nvim_create_autocmd('LspAttach', {
+        callback = function(args)
+          local bufnr = args.buf
+          vim.keymap.set('n', '<leader>ca', vim.lsp.buf.definition, {
+            buffer = bufnr,
+            desc = 'Go to definition',
+          })
+        end,
+      })
     end,
   },
 }
